@@ -11,7 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/prism.min.js"></script>
     
     <!-- Stylesheets -->
-    <link rel="stylesheet" href="/Stylesheets/visualization.css">
+    <link rel="stylesheet" href="/Boids/Stylesheets/visualization.css">
 </head>
 <body>
     <div class="container">
@@ -255,8 +255,8 @@ function setup() {
   background(220);
   
   for(let i = 0; i &lt nBoids; i++){
-    boids[i].updatePhysics(deltaTime*0.001);
-    boids[i].drawBoid(deltaTime);
+    boids[i].updatePhysics(deltaTime*0.001); // deltaTime is milliseconds so we scale it
+    boids[i].drawBoid();
   }
 }</code>
 </pre>
@@ -265,24 +265,90 @@ function setup() {
 
         <section class="tutorial-section">
             <h2>Example Steering Behaviour: Seeking</h2>
-            <p>p5.js is a JavaScript library that'll let us create interactive programs. 
-                It's also fairly easy to add to a website if you want to add it to a project!
+            <p>The steering behaviour formula is: <strong>Steering Force = Desired Velocity - Current Velocity</strong>
+            
             </p>
             
+            <p>So to calculate our force (which is equivalent to acceleration through F=ma given constant mass), 
+                we just need to calculate desired velocity and then calculate steering force.
+            </p>
+
+            <p>So what is desired velocity for the <strong>Seek</strong> steering behaviour? 
+            It's the difference between the target's position and our current position! </p>
+
+            <pre><code class="language-javascript">seek(target){
+    // Fill in these variables! Use the sub method for p5 vectors (look it up)
+    let desiredVel = 
+    let steeringForce = 
+
+    this.acceleration = steeringForce;
+  }</code>
+</pre>
             
-            <h3>Getting Started: p5 editor</h3>
-           
+<p>Also make sure to call the <code>seek()</code> function inside of draw - probably before updating physics and drawing!</p>
+
+            <h3>Setting parameters </h3>
+
+            <p>This works, but we might want our boids to move slower or turn slower or so on. 
+                We should have parameters for the magnitude of the desired velocity (so how quickly it should move when it achieves desired velocity) 
+                and for how quickly the velocity changes (in other words, set magnitude of our force).
+            </p>
+
+            <p>Do the following:
+                <ul>
+                    <li>Add the static variables desiredVelSpeed and forceMag</li>
+                    <li>Use <code>setMag()</code> inside of <code>seek()</code> to scale with the static variables</li>
+                </ul>
+            </p>
+
+            <p>If you want, you can also use <code>limit()</code> instead of <code>setMag()</code> to add limits.</p>
+
+            <p><em>Code for this section: <a href="https://editor.p5js.org/RexMortem/sketches/yhSvBttdX">https://editor.p5js.org/RexMortem/sketches/yhSvBttdX</a></em></p>
+        </section>
+        
+        <section class="tutorial-section">
+            <h2>Example Steering Behaviour: Separation </h2>
+            <p>A core steering behaviour of traditional boids are that they try to avoid colliding into each other. 
+                This is also interesting since it's a group-based steering behaviour.
+            </p>
+
+            <p>We will use the same steering force calculation as before, but we will need a more 
+                involved calculation to find desired velocity.
+            </p>
+            
+            <h3>Stay Away!</h3>
+
+            <p>To code separation, we want to receive a list of all the boids and do the following:
+                <ul>
+                    <li>Create a variable for the desired minimum separation</li>
+                    <li>Loop through all boids which aren't the current boid</li>
+                    <li>If they're closer than the minimum separation, create an away velocity which points away from the other boid</li>
+                    <li>Add all these forces from all the other boids together and create an average desired velocity</li>
+                    <li>Apply the same steering force calculations as before</li>
+                </ul>
+            </p>
+            
+            <p>To test, we want to change the initialisation to create a 2D grid of boids. </p>
+
+            <p><em>Code for this section: <a href="https://editor.p5js.org/RexMortem/sketches/REqnNmpG_">https://editor.p5js.org/RexMortem/sketches/REqnNmpG_</a></em></p>
         </section>
 
         <section class="tutorial-section">
             <h2>Combining Steering Behaviours</h2>
-            <p>p5.js is a JavaScript library that'll let us create interactive programs. 
-                It's also fairly easy to add to a website if you want to add it to a project!
+            <p> Combining steering behaviours is pretty simple - if we amend our steering behaviours
+                to return a force, then we can apply weights to the returned forces and add them up.
             </p>
+
+            <p>We then get a function like this: </p>
             
-            
-            <h3>Getting Started: p5 editor</h3>
-           
+            <pre><code class="language-javascript">steer(target, boids, nBoids){
+    let sepForce = this.separate(boids, nBoids);
+    let seekForce = this.seek(target);
+
+    this.acceleration = sepForce.add(seekForce);
+}</code>
+</pre>
+
         </section>
         
         <section class="tutorial-section">
@@ -304,36 +370,132 @@ function setup() {
         let sketchInstance;
 
         function sketch(p) {
-            let x = 200;
-            let y = 200;
+            class Boid {
+  static size = 20;
+  static desiredSeekSpeed = 50;
+  static seekForceMag = 25;
+  static desiredSepSpeed = 20;
+  static sepForceMag = 15;
 
-            function addRandomDirection(){
-                let randomChoice = p.floor(p.random(4));
+  constructor(){
+    this.position = p.createVector(0,0);
+    this.velocity = p.createVector(0,0);
+    this.acceleration = p.createVector(0,0);
+  }
+  
+  drawBoid(){
+    let heading = this.velocity;
+    
+    if((heading.x == 0) && (heading.y == 0)){
+       heading = p.createVector(0, 1);
+    }
+    
+    let dp2 = heading.copy();
+    
+    dp2.rotate(170);
+    dp2.setMag(Boid.size);
+    
+    let dp3 = heading.copy();
+    
+    dp3.rotate(190);
+    dp3.setMag(Boid.size);
+    
+    let p2 = this.position.copy().add(dp2);
+    let p3 = this.position.copy().add(dp3);
+    
+    p.triangle(this.position.x, this.position.y, p2.x, p2.y, p3.x, p3.y);
+  }
+ 
+  updatePhysics(dt){
+    this.position.add(0.5 * this.velocity.x * dt, 0.5 * this.velocity.y * dt);
+    this.velocity.add(this.acceleration.x * dt, this.acceleration.y * dt);
+    this.position.add(0.5 * this.velocity.x * dt, 0.5 * this.velocity.y * dt); 
+  }
+  
+  separate(boids, nBoids){
+    let desiredSeparationDist = 20;
+    
+    for(let i =0; i < nBoids; i++){
+      let otherBoid = boids[i];
+      
+      if (this == otherBoid){
+        continue;
+      }
+      
+      let distance = p5.Vector.dist(this.position, otherBoid.position);
+      let sum = p.createVector();
+      let nCloseBoids = 0;
+      
+      if (distance < desiredSeparationDist){ // get away
+        let awayVector = this.position.copy().sub(otherBoid.position);
+        awayVector.setMag(1);
+        
+        sum.add(awayVector);
+        nCloseBoids++;
+      }
+      
+      if (nCloseBoids > 0){
+        sum.setMag(Boid.desiredSepSpeed);
 
-                switch(randomChoice){
-                    case 0:
-                        x++;
-                        break;
-                    case 1:
-                        x--;
-                        break;
-                    case 2:
-                        y++;
-                        break;
-                    default:
-                        y--;
+        let steeringForce = sum.sub(this.velocity);
+        steeringForce.setMag(Boid.sepForceMag);
+
+        return steeringForce;
+      }
+    }
+    
+    return p.createVector(0,0);
+  }
+
+  seek(target){
+    let desiredVel = target.copy().sub(this.position);
+    desiredVel.setMag(Boid.desiredSeekSpeed);
+    
+    let steeringForce = desiredVel.sub(this.velocity);
+    steeringForce.setMag(Boid.seekForceMag);
+    
+    return steeringForce;
+  }
+
+  steer(target, boids, nBoids){
+    let sepForce = this.separate(boids, nBoids);
+    let seekForce = this.seek(target);
+    
+    this.acceleration = sepForce.add(seekForce);
+  }
+}
+
+const boids = [];
+const nBoids = 400;
+
+            p.setup = function() {
+                p.angleMode(p.DEGREES);
+                p.createCanvas(400, 400);
+                
+                p.fill("teal");
+                
+                for(let x = 0; x < 20; x++){
+                    for(let y = 0; y < 20; y++){
+                    let newBoid = new Boid();
+
+                    newBoid.position = p.createVector(5 + x*15, 5 + y*15);
+                    
+                    boids.push(newBoid);
+                    }
                 }
             }
 
-            p.setup = function() {
-                p.createCanvas(400, 400);
-                p.background(140, 205, 230);
-            }
-
             p.draw = function() {
-                p.stroke(245, 175, 0); // pen colour 
-                addRandomDirection(); // change state
-                p.point(x, y); // draw state
+                p.background(220);
+                let mouseVector = p.createVector(p.mouseX, p.mouseY);
+                
+                for(let i = 0; i < nBoids; i++){
+                    boids[i].steer(mouseVector, boids, nBoids);
+                    //console.log(boids[i].acceleration);
+                    
+                    boids[i].updatePhysics(p.deltaTime*0.001);
+                    boids[i].drawBoid();
+                }
             }
         }
 
