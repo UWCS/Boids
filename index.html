@@ -272,6 +272,8 @@ function setup() {
 
         <section class="tutorial-section">
             <h2>Example Steering Behaviour: Seeking</h2>
+            <p>We're going to add behaviour for the boids to seek the mouse! </p>
+
             <p>The steering behaviour formula is: <strong>Steering Force = Desired Velocity - Current Velocity</strong>
             
             </p>
@@ -291,6 +293,8 @@ function setup() {
     this.acceleration = steeringForce;
   }</code>
 </pre>
+
+            <p>Note that the target here is the position of the target we're seeking (which should be the mouse).</p>
             
 <p>Also make sure to call the <code>seek()</code> function inside of draw - probably before updating physics and drawing!</p>
 
