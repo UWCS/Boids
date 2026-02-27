@@ -7,23 +7,23 @@
     
     <!-- p5.js library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/themes/prism.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.23.0/prism.min.js"></script>
     
     <!-- Stylesheets -->
-    <link rel="stylesheet" href="/Boids/Stylesheets/visualization.css">
+    <link rel="stylesheet" href="/Stylesheets/visualization.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>Visualization</h1>
-            <p class="subtitle">Interactive p5.js Animation</p>
+            <h1>BOIDS</h1>
+            <p class="subtitle">Simulating agents with p5.js</p>
         </header>
 
         <div class="content-grid">
             <div class="text-section">
-                <h2>About This Project</h2>
-                <p>Welcome to our interactive visualization project. This page showcases a live p5.js animation that demonstrates dynamic graphics rendering and interactive computer graphics.</p>
-                <p>The visualization uses procedural generation and algorithmic drawing to create engaging visual patterns. This is a great way to explore creative coding and the intersection of mathematics and art.</p>
-                <p>p5.js is a JavaScript library that makes coding accessible and creative. It's perfect for artists, designers, and educators who want to create interactive visual experiences.</p>
+                <h2>What we'll make</h2>
+                <p>Boids.</p>
             </div>
 
             <div class="visualization-section">
@@ -32,26 +32,270 @@
         </div>
 
         <section class="tutorial-section">
-            <h2>P5 Introduction</h2>
-            <p>p5.js is a JavaScript library that brings the power of Processing to the web. It makes it simple to create interactive graphics and animations in your browser, enabling creative coding for artists, designers, and educators.</p>
+            <h2>Intro to p5</h2>
+            <p>p5.js is a JavaScript library that'll let us create interactive programs. 
+                It's also fairly easy to add to a website if you want to add it to a project!
+            </p>
             
-            <h3>What Can You Do With p5.js?</h3>
-            <p>p5.js allows you to:</p>
+            
+            <h3>Getting Started: p5 editor</h3>
+            
+            <p>We'll be using the p5 editor to write and run our p5 simulations:
+                <ul>
+                    <li>Go to <a href="https://editor.p5js.org/">https://editor.p5js.org/</a></li>
+                    <li>Create an account</li>
+                    <li>Create a new sketch</li>
+                </ul>
+            </p>
+
+            <h3>Basics of p5</h3>
+            <p>Here's a basic initial p5 program. </p>
+            <pre><code class="language-javascript">function setup() { // this is run once at the start
+  createCanvas(400, 400);
+  console.log("Start!");
+}
+
+function draw() { // this is run every frame
+  background(220);
+  console.log("Every frame");
+}
+</code></pre>
+            <p>p5.js works by providing two main functions: <code>setup()</code> (run once) and <code>draw()</code> (run continuously, every frame). </p>
+            
+            <p>Critically, <strong> you can only use p5 library functions inside of these functions. </strong> </p>
+
+            <p>We can see the key difference between <code>setup()</code> and <code>draw()</code> when we look at the following two slightly different programs: </p>
+            <pre><code class="language-javascript">function setup() { 
+  createCanvas(400, 400);
+}
+
+function draw() { 
+  background(220); 
+  circle(mouseX, mouseY, 40);
+}</code></pre>
+
+            <pre><code class="language-javascript">function setup() { 
+  createCanvas(400, 400);
+  background(220); 
+}
+
+function draw() { 
+  circle(mouseX, mouseY, 40);
+}</code></pre>
+
+            <p>So in the first example, background is called inside of <code>draw()</code> and this covers stuff drawn in the previous frames. </p>
+
+            <h3>Getting Colourful</h3>
+            <p>To inject some fun into our dreary lives, we can add some colour! The <code>stroke()</code> function sets the colour of the perimeter of shapes whenever called and <code>fill()</code> does this for the area.</p>
+
+            <pre><code class="language-javascript">function setup() { 
+  createCanvas(400, 400);
+  background(220); 
+  
+  stroke("red");
+  fill("yellow");
+}
+
+function draw() { 
+  circle(mouseX, mouseY, 40);
+}</code></pre>
+        </section>
+
+        <section class="tutorial-section">
+            <h2>Creating a boid class: Drawing </h2>
+            <p>We'll create a class for our boids. There should be three main parts:
+                <ul>
+                    <li>The steering behaviour logic</li>
+                    <li>Updating the physics</li>
+                    <li>Drawing the boid to the screen</li>
+                </ul>
+            </p>
+
+            <p>For now, let's just focus on drawing the boid to the screen; 
+                our visualisation will have boids as triangles and will point in the direction of travel (velocity).
+                Since it's just following our mouse, we'll set the velocity to some arbitrary direction. </p>
+            
+            <h3>Initialiser</h3>
+            <p>Note that static variables are just variables that belong to the class rather than a specific instance
+                - so editing one changes it for all instances of the class
+                (p5 may also warn you about initialising a static variable but it should be fine).
+            </p>
+            
+            <pre><code class="language-javascript">class Boid {
+  static size = 20;
+
+  constructor(){
+    this.position = createVector(0,0);
+    this.velocity = createVector(1,0);
+    this.acceleration = createVector(0,0);
+  }
+}</code></pre>
+
+            <p>If you want to understand how vectors in p5 work better, you can check the docs: <a href="https://p5js.org/reference/p5/p5.Vector/">https://p5js.org/reference/p5/p5.Vector/</a></p>
+
+            <h3>Drawing a triangle</h3>
+
+            <p><strong>(If you're not interested in the maths, then feel free to just copy the triangle drawing code at the link at the bottom)</strong></p>
+
+            <p>To draw a <a href="https://p5js.org/reference/p5/triangle/">triangle</a> in p5, we have to provide the coordinates to the points of the triangle.</p>
+
+            <p>One point (p1) can just be the boid's position, but the other two points should be drawn so that the triangle points
+                in the direction of the boid's velocity.
+            </p>
+
+            <p>We can do this by creating difference vectors that'll represent the sides of the triangle - one side being between p1 and p2, and the other being between p2 and p3.
+                We generate these difference vectors by just rotating the velocity and scaling it to be the size of the length of our boid.
+            </p>
+            
+            <pre><code class="language-javascript">let dp2 = heading.copy();
+    
+dp2.rotate(170);
+dp2.setMag(Boid.size);
+
+let dp3 = heading.copy();
+
+dp3.rotate(190);
+dp3.setMag(Boid.size);
+
+// finish the code to add dp2, dp3 to form p2, p3
+// call the triangle method to draw our triangle, now that we know p1 (this.position), p2, p3</code>
+</pre>
+            <p>Note that we are using degrees inside of the <code>rotate()</code> method - 
+            for this to work, we have to call <code>angleMode(DEGREES)</code> at some point. 
+        You should probably put this in <code>setup()</code> somewhere.</p>
+
+            <p><strong>TIP: </strong> When completing this function - 
+                keep in mind that if you're creating another vector from an existing one, you should <strong>copy</strong> it.
+            Otherwise, editing the new variable will also edit the original vector.
+            </p>
+
+            <p>Example of code which changes the original vector:</p>
+
+            <pre><code class="language-javascript">let original = createVector(10, 0);
+let another = original.add(createVector(25, 0));
+  
+console.log("Original: ", original.x, original.y); // What is this?
+console.log("Another: ", original.x, original.y);
+</code>
+</pre>
+            <h3>Edge Case: velocity being 0</h3>
+            
+            <p>There is an edge-case we haven't considered: what will happen when the velocity is (0, 0)? </p>
+
+            <p>To fix this, just add a check at the top - if it is (0, 0), then set heading to (0, 1). </p>
+
+            <h3>Drawing the boid</h3>
+
+            <p>Let's draw our boid at the mouse's position! </p>
+            <pre><code class="language-javascript">let mouseBoid; // here so both "setup" and "draw" can see it
+
+function setup() {
+  angleMode(DEGREES);
+  createCanvas(400, 400);
+  
+  mouseBoid = new Boid(); // we have to create inside of setup
+}
+
+function draw() {
+  background(220);
+  mouseBoid.position = createVector(mouseX, mouseY);
+  mouseBoid.drawBoid();
+}</code>
+</pre>
+
+            <p><em>Code for this section: <a href="https://editor.p5js.org/RexMortem/sketches/YDrsmVmJE">https://editor.p5js.org/RexMortem/sketches/YDrsmVmJE</a></em></p>
+        </section>
+
+        <section class="tutorial-section">
+            <h2>Creating a boid class: physics and many boids </h2>
+            <p>Let's add acceleration to our boids. To do this, let's create 10 or so boids at the top of our screen
+                and give them some downwards acceleration!
+            </p>
+            
+            
+            <h3>Adding a physics update method </h3>
+            
+            <p>As explained in the presentation, you should update velocity and acceleration in a specific way to do it accurately.</p>
+
+            <pre><code class="language-javascript">updatePhysics(){
+    this.position.add(0.5 * this.velocity.x * dt, 0.5 * this.velocity.y * dt);
+    this.velocity.add(this.acceleration.x * dt, this.acceleration.y * dt);
+    this.position.add(0.5 * this.velocity.x * dt, 0.5 * this.velocity.y * dt); 
+}</code>
+</pre>
+
+            <h3>Creating many boids</h3>
+            <p>Instead of just a boid at our mouse's position, we'll need to track many boids - let's use an array. </p>
+
+            <pre><code class="language-javascript">const boids = [];
+const nBoids = 20;
+
+function setup() {
+  angleMode(DEGREES);
+  createCanvas(400, 400);
+  
+  for(let i = 0; i &lt nBoids; i++){
+    let newBoid = new Boid();
+
+    // INSERT code to space the boids out!
+    // INSERT code to set acceleration! 
+
+    boids.push(newBoid);
+  }
+}</code>
+</pre>  
+        <p>Edit the code to position the boids in appropriate start locations - maybe set position so 
+            they're in a straight line at the top?
+        </p>
+
+        <p>Also edit the code to set the boid's acceleration. </p>
+
+        <p>And our draw logic is even more straightforward: </p>
+        <pre><code class="language-javascript">function draw() {
+  background(220);
+  
+  for(let i = 0; i &lt nBoids; i++){
+    boids[i].updatePhysics(deltaTime*0.001);
+    boids[i].drawBoid(deltaTime);
+  }
+}</code>
+</pre>
+        <p><em>Code for this section: <a href="https://editor.p5js.org/RexMortem/sketches/7NjQdeUks">https://editor.p5js.org/RexMortem/sketches/7NjQdeUks</a></em></p>
+        </section>
+
+        <section class="tutorial-section">
+            <h2>Example Steering Behaviour: Seeking</h2>
+            <p>p5.js is a JavaScript library that'll let us create interactive programs. 
+                It's also fairly easy to add to a website if you want to add it to a project!
+            </p>
+            
+            
+            <h3>Getting Started: p5 editor</h3>
+           
+        </section>
+
+        <section class="tutorial-section">
+            <h2>Combining Steering Behaviours</h2>
+            <p>p5.js is a JavaScript library that'll let us create interactive programs. 
+                It's also fairly easy to add to a website if you want to add it to a project!
+            </p>
+            
+            
+            <h3>Getting Started: p5 editor</h3>
+           
+        </section>
+        
+        <section class="tutorial-section">
+            <h2>Resources</h2>
+            <p>This workshop wouldn't have been possible without the existing work and tutorials on boids.
+                If you're interested in learning more, check out the links below:
+            </p>
+            
             <ul>
-                <li>Draw shapes, lines, and complex geometric patterns</li>
-                <li>Create interactive visualizations that respond to mouse and keyboard input</li>
-                <li>Generate animations and dynamic visual effects</li>
-                <li>Build data visualizations and generative art</li>
-                <li>Prototype games and interactive experiences</li>
+                <li><a href="https://natureofcode.com/autonomous-agents/">https://natureofcode.com/autonomous-agents/</a></li>
+                <li><a href="https://www.red3d.com/cwr/boids/">https://www.red3d.com/cwr/boids/</a></li>
             </ul>
-
-            <h3>How It Works</h3>
-            <p>p5.js works by providing two main functions: <code>setup()</code> and <code>draw()</code>. The <code>setup()</code> function runs once when your sketch starts, making it perfect for initialization. The <code>draw()</code> function runs continuously in a loop, allowing you to create animations and respond to user input.</p>
-            
-            <p>In the example above, we're using the <code>setup()</code> function to create a canvas and set a background color. Then, in <code>draw()</code>, we continuously update the position and draw a point, creating a random walk pattern across the canvas.</p>
-
-            <h3>Getting Started</h3>
-            <p>To get started with p5.js, you can include the library from a CDN (as we've done here) and start coding. Create a sketch function, define your setup and draw functions, and watch your creativity come to life in real-time!</p>
+           
         </section>
     </div>
 
