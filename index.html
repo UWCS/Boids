@@ -147,18 +147,25 @@ function draw() {
                 We generate these difference vectors by just rotating the velocity and scaling it to be the size of the length of our boid.
             </p>
             
-            <pre><code class="language-javascript">let dp2 = heading.copy();
+            <p>We will create a <code>drawBoid()</code> method inside of the Boid class to do this: </p>
+            <pre><code class="language-javascript">
+drawBoid(){
+    let heading = this.velocity;
     
-dp2.rotate(170);
-dp2.setMag(Boid.size);
-
-let dp3 = heading.copy();
-
-dp3.rotate(190);
-dp3.setMag(Boid.size);
-
-// finish the code to add dp2, dp3 to form p2, p3
-// call the triangle method to draw our triangle, now that we know p1 (this.position), p2, p3</code>
+    let dp2 = heading.copy();
+    
+    dp2.rotate(170);
+    dp2.setMag(Boid.size);
+    
+    let dp3 = heading.copy();
+    
+    dp3.rotate(190);
+    dp3.setMag(Boid.size);
+    
+    // finish the code to add dp2, dp3 to form p2, p3
+    // call the triangle method to draw our triangle, now that we know p1 (this.position), p2, p3
+  }
+    </code>
 </pre>
             <p>Note that we are using degrees inside of the <code>rotate()</code> method - 
             for this to work, we have to call <code>angleMode(DEGREES)</code> at some point. 
