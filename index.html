@@ -1,38 +1,78 @@
 <!DOCTYPE html>
-
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <!-- initial-scale refers to zooming for mobile, device-width sets the width of page to follow screen-width of device  -->
-        <meta name="viewport" content="width=device-width, initial-scale=1">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Visualization</title>
+    
+    <!-- p5.js library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="/eds-world/Stylesheets/visualization.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Visualization</h1>
+            <p class="subtitle">Interactive p5.js Animation</p>
+        </header>
 
-        <title> Hello, World </title>
+        <div class="content-grid">
+            <div class="text-section">
+                <h2>About This Project</h2>
+                <p>Welcome to our interactive visualization project. This page showcases a live p5.js animation that demonstrates dynamic graphics rendering and interactive computer graphics.</p>
+                <p>The visualization uses procedural generation and algorithmic drawing to create engaging visual patterns. This is a great way to explore creative coding and the intersection of mathematics and art.</p>
+                <p>p5.js is a JavaScript library that makes coding accessible and creative. It's perfect for artists, designers, and educators who want to create interactive visual experiences.</p>
+            </div>
 
-        <!-- Libraries (we use CDNs since it's faster for users that have visited jQuery & boostrap based sites before) -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-
-        <!-- Stylesheets -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
-        <link rel="stylesheet" href="/eds-world/Stylesheets/default.css">
-
-        <!-- Low-Priority Scripts -->
-        <script src="/eds-world/Scripts/CycleText.js"></script>
-    </head>
-
-    <body>
-
-        <div class="jumbotron text-center">
-            <h1> Edward Denton</h1>
-            <p class="CycleText"> Loading </p>
+            <div class="visualization-section">
+                <div id="p5-container"></div>
+            </div>
         </div>
-       <h1> Hi There! </h1>
+    </div>
 
-       <p> <a href="/eds-notes"> Go to notes </a> </p>
-        <p> <a href="/eds-world/Pages/simulation.html"> Testing out simulation stuff </a></p>
-       <div class="container baseContainer">
-            <h2> Logo Parser and Interpreter (Haskell) </h2>
-            <p> A description for the logo parser and interpreter! Not sure what to put in a project description and name yet, but probably a link to the project and a small description. </p>
-       </div>
-    </body>
+    <script>
+        // Load the basicp5.js sketch
+        let sketchInstance;
+
+        function sketch(p) {
+            let x = 200;
+            let y = 200;
+
+            function addRandomDirection(){
+                let randomChoice = p.floor(p.random(4));
+
+                switch(randomChoice){
+                    case 0:
+                        x++;
+                        break;
+                    case 1:
+                        x--;
+                        break;
+                    case 2:
+                        y++;
+                        break;
+                    default:
+                        y--;
+                }
+            }
+
+            p.setup = function() {
+                p.createCanvas(400, 400);
+                p.background(140, 205, 230);
+            }
+
+            p.draw = function() {
+                p.stroke(245, 175, 0); // pen colour 
+                addRandomDirection(); // change state
+                p.point(x, y); // draw state
+            }
+        }
+
+        // Create p5 instance in the container
+        let container = document.getElementById('p5-container');
+        sketchInstance = new p5(sketch, container);
+    </script>
+</body>
 </html>
